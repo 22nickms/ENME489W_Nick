@@ -2,18 +2,18 @@ clc; clearvars;
 
 % Initialization %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    x_init = 1;             % initial guess
+    x_init = [1;1;1];        % initial guess -- Establishes a 3x1 column vector for 3 vars
     x_current = x_init;     % initial guess
     cc = 10^-4;             % convergence critieria
     h = 10^-8;              % numerical step size
     k = 1;                  % counter for loop
-    f_of_x = 0;             % function output at x
-    f_of_x_plus_h =0;       % function output at x plus h
-    residual = f_of_x-0;    % difference between output and solution
-    numericalResidual = 0;  % difference between output and soultion at x+h 
+    f_of_x = zeros(3,1);             % function output at x -- 3x1 CV
+    f_of_x_plus_h = zeros(3,1);       % function output at x plus h -- 3x1 CV
+    residual = zeros(3,1);    % difference between output and solution -- 3x1 CV
+    numericalResidual = zeros(3,1);  % difference between output and soultion at x+h 
     m = 0;                  % slope
     max_iter = 10^2;        % maximum number of iterations to prevent blow up
-    targetValue = 2;
+    targetValue = [2;2;2]; -- 3x1 CV for 3 target vals
 
 % Newton-Raphson Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -22,26 +22,55 @@ clc; clearvars;
         f_of_x = mySpecialFunction(x_current);   % evaluate current guess
         residual = f_of_x-targetValue;                     % determine distance from desired goal
 
-            if abs(residual)<cc         % determine if current distance from goal is close enough
+            if norm(residual)<cc         % determine if current distance from goal is close enough -- norm for multivar vec
                 break
             end
 
-        f_of_x_plus_h = mySpecialFunction(x_current+h);   % evaluate function at small distance from current guess
-        numericalResidual = f_of_x_plus_h-targetValue;    % difference between output and soultion at x+h 
-        m = (numericalResidual-(residual))/h;                     % Determine slop from approximation of derivative
-        x_current=x_current-residual/m;                     % Find next guess from x intercept of slope of tangent line
+        %f_of_x_plus_h = mySpecialFunction(x_current+h);   % evaluate function at small distance from current guess
+       % numericalResidual = f_of_x_plus_h-targetValue;    % difference between output and soultion at x+h 
+       % m = (numericalResidual-(residual))/h;                     % Determine slop from approximation of derivative
+       % x_current=x_current-residual/m;                     % Find next guess from x intercept of slope of tangent line
+            
+            for n = 1:3 % Goes through 3 vars
+            x_c1 = x_current; % copy of x_current 
+            x_c1(n) = x_c1(n) + h; % step size added
+
+            f_of_x_plus_h = mySpecialFunction(x_c1);
+            numericalResidual = f_of_x_plus_h - targetValue;
+
+            J(:,n) = (numericalResidual - residual) ./ h; % Jacobian rows & n columns
+        end
+        
+        x_current = x_current- J\residual;   % Find next guess from x intercept of slope of tangent line
     
-        k=k+1;                                            % track number if iterations
+        k=k+1;    % track number if iterations
     end
-    
+                                             % track number if iterations
+    end
+
+% Defined mySpecialFunction(x) for verification of test
+function f = mySpecialFunction(x)
+f = zeros(3,1); % A 3x1 matrix 
+f(1) = x(1)^2 + x(2) + 4*x(3); % Random Function 1
+f(2) = x(1)^3 + x(2) + x(3); % Random Function 2
+f(3) = x(1)^4 + x(2) + 6*x(3); % Random Function 3
+end
+
 % Plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     x = linspace(-1.2,-0.5);
     y = mySpecialFunction(x);
+    disp('Values of x1, x2, x3:')
+    disp(x_current) % Displays x values solns
 
-    plot(x,y)
-    hold on
-    grid on
+    disp('Residual:')
+    disp(residual) % If residual ~ 0 --> it converges
 
-    plot(x_current,f_of_x,'*k')
+    
+    % Plots are coded for 1D Data
+   % plot(x,y)
+   % hold on
+   % grid on
+
+   % plot(x_current,f_of_x,'*k')
 
